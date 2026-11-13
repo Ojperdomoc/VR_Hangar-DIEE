@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#202a26" />
+    <meta name="description" content="Recorrido virtual interactivo por el Hangar DIEE de la Universidad Nacional de Colombia." />
+    <title>Hangar DIEE · Laboratorio inmersivo</title>
+    <link rel="icon" type="image/svg+xml" href="%BASE_URL%favicon.svg" />
+  </head>
+  <body>
+    <div id="app">
+      <canvas id="scene-canvas" aria-label="Recorrido 3D interactivo por el laboratorio"></canvas>
+      <div class="scene-vignette" aria-hidden="true"></div>
+
+      <header class="topbar">
+        <a class="brand" href="#" aria-label="Hangar DIEE, inicio">
+          <span class="brand-mark" aria-hidden="true"><span>UN</span><i></i></span>
+          <span class="brand-copy">
+            <span class="brand-university">UNIVERSIDAD NACIONAL DE COLOMBIA</span>
+            <strong>Hangar <span>DIEE</span></strong>
+          </span>
+        </a>
+
+        <nav class="top-nav" aria-label="Secciones del recorrido">
+          <button class="nav-button is-active" type="button" data-view="explore">
+            <span class="nav-index">01</span> Recorrido
+          </button>
+          <button class="nav-button" type="button" data-view="occupancy">
+            <span class="nav-index">02</span> Aforo
+          </button>
+          <button class="nav-button" type="button" data-view="courses">
+            <span class="nav-index">03</span> Cursos
+          </button>
+        </nav>
+
+        <div class="top-actions">
+          <div class="live-capacity" aria-label="Aforo estimado">
+            <span class="live-dot"></span>
+            <span class="live-label">AFORO ESTIMADO</span>
+            <strong><span id="top-count">0</span><i>/</i>28</strong>
+          </div>
+          <button class="top-action photo-action" id="photos-open" type="button" aria-label="Comparar las fotografías del espacio">
+            <svg viewBox="0 0 20 20" aria-hidden="true"><rect x="2.2" y="3.2" width="15.6" height="13.6" rx="2.1"/><circle cx="7" cy="8" r="1.6"/><path d="m3.2 14.4 4.2-3.9 2.8 2.2 2.1-1.9 4.5 3.6"/></svg>
+            <span>Fotos</span>
+          </button>
+          <button class="top-action vr-action" id="vr-toggle" type="button" title="Conecta un visor compatible con WebXR">
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 6.2c.3-1.2 1.2-1.9 2.5-1.9h9c1.3 0 2.2.7 2.5 1.9l1 5.2c.3 1.7-.4 2.7-1.8 2.7-.7 0-1.1-.3-1.7-1l-1.4-1.7H6.9l-1.4 1.7c-.6.7-1 1-1.7 1-1.4 0-2.1-1-1.8-2.7L3 6.2Z"/><path d="M6.1 7.6v2.2M5 8.7h2.2M14.1 8.1h.1M15.7 9.3h.1"/></svg>
+            <span>Visor VR</span>
+          </button>
+        </div>
+      </header>
+
+      <main class="stage">
+        <aside class="info-panel" id="mode-panel" aria-live="polite" aria-label="Información del recorrido"></aside>
+        <button class="reopen-panel" id="reopen-panel" type="button" aria-label="Mostrar panel de información">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m7 4 6 6-6 6"/></svg>
+          <span>Panel</span>
+        </button>
+
+        <section class="right-stack" aria-label="Orientación en el laboratorio">
+          <div class="room-status">
+            <span class="status-icon"><i></i><i></i><i></i></span>
+            <div><small>ESTÁS EN</small><strong id="room-status-text">HANGAR · VISTA GENERAL</strong></div>
+          </div>
+          <button class="map-card" id="mini-map" type="button" aria-label="Pulsa en el plano para desplazarte por el laboratorio">
+            <span class="map-heading"><span>PLANO DE SALA</span><small>TOCA PARA IR</small></span>
+            <svg class="floor-plan" viewBox="0 0 160 120" aria-hidden="true">
+              <rect class="map-outline" x="9" y="9" width="142" height="102" rx="3" />
+              <path class="map-window" d="M27 11h106M27 109h106" />
+              <path class="map-grid" d="M14 35h132M14 61h132M14 87h132" />
+              <g class="map-furniture">
+                <rect x="28" y="27" width="37" height="11" rx="2"/><rect x="76" y="27" width="37" height="11" rx="2"/>
+                <rect x="28" y="54" width="37" height="11" rx="2"/><rect x="76" y="54" width="37" height="11" rx="2"/>
+                <rect x="28" y="81" width="37" height="11" rx="2"/><rect x="76" y="81" width="37" height="11" rx="2"/>
+                <rect class="map-side-bench" x="126" y="38" width="9" height="40" rx="2"/>
+              </g>
+              <circle class="map-player-halo" cx="80" cy="99" r="5.7" />
+              <circle class="map-player" id="map-player" cx="80" cy="99" r="2.7" />
+              <path class="map-north" d="m143 20 3 6h-6l3-6Z" />
+              <text class="map-n-label" x="143" y="17" text-anchor="middle">N</text>
+            </svg>
+            <span class="map-legend"><i></i> Tu posición <b>·</b> bancos de trabajo</span>
+          </button>
+        </section>
+
+        <section class="detail-card" id="detail-card" aria-live="polite" aria-label="Detalle de equipo o curso" hidden></section>
+
+        <div class="control-strip" aria-label="Controles del recorrido">
+          <div class="control-location"><span class="control-pulse"></span><span>MODELO 3D CONCEPTUAL</span><i></i><span>BOGOTÁ · UNAL</span></div>
+          <div class="control-hints">
+            <span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd><em>moverte</em></span>
+            <span class="hint-separator"></span>
+            <span><b class="drag-glyph">↔</b><em>arrastra para mirar</em></span>
+          </div>
+        </div>
+
+        <div class="touch-controls" aria-label="Controles táctiles de movimiento">
+          <button type="button" data-move="forward" aria-label="Avanzar">↑</button>
+          <div class="touch-controls-row">
+            <button type="button" data-move="left" aria-label="Mover a la izquierda">←</button>
+            <button type="button" data-move="back" aria-label="Retroceder">↓</button>
+            <button type="button" data-move="right" aria-label="Mover a la derecha">→</button>
+          </div>
+        </div>
+      </main>
+
+      <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+      <div class="photo-modal" id="photo-modal" role="dialog" aria-modal="true" aria-labelledby="photo-title" hidden>
+        <button class="modal-scrim" type="button" data-close-photos aria-label="Cerrar comparación"></button>
+        <section class="photo-window">
+          <header class="photo-header">
+            <div>
+              <span class="eyebrow"><i></i> REGISTRO DEL ESPACIO</span>
+              <h2 id="photo-title">Del espacio base al laboratorio equipado</h2>
+            </div>
+            <button class="icon-close" type="button" data-close-photos aria-label="Cerrar">
+              <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5 5 10 10M15 5 5 15"/></svg>
+            </button>
+          </header>
+          <div class="photo-stage" id="photo-stage" style="--split: 50%">
+            <img class="photo-image photo-fitted" src="%BASE_URL%images/laboratorio-equipado.jpg" alt="Laboratorio DIEE equipado con bancos de trabajo y sillas" />
+            <div class="photo-base-layer">
+              <img class="photo-image" src="%BASE_URL%images/espacio-inicial.jpg" alt="Espacio del Hangar DIEE antes del montaje de los bancos" />
+            </div>
+            <div class="photo-tag photo-tag-base"><i></i> ESPACIO BASE</div>
+            <div class="photo-tag photo-tag-fitted"><i></i> PROPUESTA EQUIPADA</div>
+            <div class="photo-divider" aria-hidden="true"><span><svg viewBox="0 0 20 20"><path d="m7 5-4 5 4 5M13 5l4 5-4 5"/></svg></span></div>
+            <input class="photo-range" id="photo-range" type="range" min="0" max="100" value="50" aria-label="Desliza para comparar el espacio base y el laboratorio equipado" />
+          </div>
+          <footer class="photo-footer">
+            <div class="photo-caption"><span class="caption-mark">↔</span><span>Desliza el control para comparar las dos fotografías.</span></div>
+            <div class="photo-shortcuts" aria-label="Ver un estado completo">
+              <button type="button" data-photo-value="100">Espacio base</button>
+              <button type="button" data-photo-value="0">Equipado</button>
+            </div>
+          </footer>
+        </section>
+      </div>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
